@@ -43,10 +43,74 @@ const BoardSection = forwardRef((_, ref) => {
     });
   };
 
+  const animateMovement = (targetRow: number, targetCol: number) => {
+    const step = () => {
+      setObjectPosition((prevPosition) => {
+        const { row, col } = prevPosition;
+
+        if (row === targetRow && col === targetCol) {
+          return prevPosition; // Alvo alcançado, para a animação
+        }
+
+        let newRow = row;
+        let newCol = col;
+
+        if (row < targetRow) newRow++;
+        else if (row > targetRow) newRow--;
+
+        if (col < targetCol) newCol++;
+        else if (col > targetCol) newCol--;
+
+        return { row: newRow, col: newCol };
+      });
+    };
+
+    const interval = setInterval(() => {
+      setObjectPosition((prevPosition) => {
+        if (prevPosition.row === targetRow && prevPosition.col === targetCol) {
+          clearInterval(interval); // Para a animação quando o alvo for alcançado
+        }
+        return prevPosition;
+      });
+      step();
+    }, 200); // Ajuste o tempo (200ms) para controlar a velocidade da animação
+  };
 
   useImperativeHandle(ref, () => ({
     moveForward,
+    moveRight: () => {
+      setDirection('right');
+      setObjectPosition((prevPosition) => ({
+        ...prevPosition,
+        col: Math.min(cols - 1, prevPosition.col + 1),
+      }));
+    },
+    moveLeft: () => {
+      setDirection('left');
+      setObjectPosition((prevPosition) => ({
+        ...prevPosition,
+        col: Math.max(0, prevPosition.col - 1),
+      }));
+    },
+    moveUp: () => {
+      setDirection('up');
+      setObjectPosition((prevPosition) => ({
+        ...prevPosition,
+        row: Math.max(0, prevPosition.row - 1),
+      }));
+    },
+    moveDown: () => {
+      setDirection('down');
+      setObjectPosition((prevPosition) => ({
+        ...prevPosition,
+        row: Math.min(rows - 1, prevPosition.row + 1),
+      }));
+    },
+    animateTo: (targetRow: number, targetCol: number) => {
+      animateMovement(targetRow, targetCol);
+    },
   }));
+
   return (
     <div>
       {board().map((row, rowIndex) => (
